@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GXP Murder - EVA</title>
+    <style>
+        :root { --gxp-dark: #0a0e14; --gxp-accent: #f46201; --au-green: #46e32d; --gm-blue: #0084ff; }
+        body { background-color: var(--gxp-dark); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; text-align: center; }
+        
+        /* HEADER & JAUGE */
+        .header { margin-bottom: 20px; }
+        .au-bar-container { width: 90%; height: 30px; background: #333; border: 3px solid #000; margin: 10px auto; overflow: hidden; border-radius: 5px; }
+        #progress-bar { width: 0%; height: 100%; background: var(--au-green); transition: width 0.5s ease; }
+        #global-percent { font-size: 2.5rem; font-weight: 900; margin-bottom: 20px; }
+
+        /* GRILLE ÉCRAN (30 JOUEURS) */
+        #screen-view { display: none; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; max-width: 1200px; margin: auto; }
+        .player-card { background: #1a1a1a; border: 1px solid #444; padding: 10px; border-radius: 8px; font-size: 0.8rem; }
+        .player-card.complete { border-color: var(--au-green); box-shadow: 0 0 10px rgba(70, 227, 45, 0.2); }
+        .player-num { font-size: 1.2rem; font-weight: bold; color: var(--gxp-accent); }
+
+        /* INTERFACE GM */
+        #gm-view { display: none; max-width: 600px; margin: auto; }
+        .gm-info { background: var(--gm-blue); padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
+        .gm-player-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: #1a1a1a; padding: 15px; margin: 5px 0; border-radius: 8px; border-left: 5px solid var(--gm-blue);
+        }
+        .gm-btns { display: flex; gap: 10px; }
+        .btn-task { padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; background: #333; color: white; min-width: 80px; }
+        .btn-task.done { background: var(--au-green); color: black; }
+
+        /* VUE JOUEUR */
+        #player-view { display: none; max-width: 500px; margin: auto; }
+        .task-status { background: #1a1a1a; padding: 15px; margin: 10px 0; border-radius: 10px; text-align: left; display: flex; justify-content: space-between; }
+        .task-status.done { border-left: 5px solid var(--au-green); color: var(--au-green); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div style="text-transform: uppercase; letter-spacing: 2px;">Progression Mission EVA</div>
+        <div class="au-bar-container"><div id="progress-bar"></div></div>
+        <div id="global-percent">0%</div>
+    </div>
+
+    <div id="screen-view"></div>
+
+    <div id="gm-view">
+        <div class="gm-info" id="gm-header">Interface GM</div>
+        <div id="gm-players-list"></div>
+    </div>
+
+    <div id="player-view">
+        <h2 id="player-title">Joueur</h2>
+        <div id="player-tasks-list"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7y7jgsCz2FKvgSVkZYw7-ufTOe6jffyA",
+            authDomain: "murder-party-6fa3e.firebaseapp.com",
+            projectId: "murder-party-6fa3e",
+            databaseURL: "https://murder-party-6fa3e-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        // Configuration du jeu
+        const NB_PLAYERS = 30;
+        const NB_TASKS = 10;
+        const params = new URLSearchParams(window.location.search);
+        const gmId = params.get('gm'); // 1, 2, 3, 4 ou 5
+        const isScreen = params.has('screen');
+        const playerNum = params.get('p'); // Pour qu'un joueur voit son avancée via ?p=5
+
+        // Attribution des tâches par GM
+        // GM 1 : Tasks 1,2 | GM 2 : Tasks 3,4 | etc.
+        const myTasks = gmId ? [(gmId * 2) - 1, gmId * 2] : [];
+
+        // --- SYNCHRONISATION TEMPS RÉEL ---
+        onValue(ref(db, 'players'), (snap) => {
+            const data = snap.val() || {};
+            render(data);
+        });
+
+        function render(playersData) {
+            let totalDone = 0;
+            const totalTasksPossible = NB_PLAYERS * NB_TASKS;
+
+            // Calcul progression globale
+            Object.values(playersData).forEach(p => {
+                if(p.tasks) totalDone += Object.values(p.tasks).filter(t => t === true).length;
+            });
+            const percent = Math.floor((totalDone / totalTasksPossible) * 100);
+            document.getElementById('progress-bar').style.width = percent + "%";
+            document.getElementById('global-percent').innerText = percent + "%";
+
+            if (isScreen) renderScreen(playersData);
+            else if (gmId) renderGM(playersData);
+            else if (playerNum) renderPlayer(playersData[playerNum], playerNum);
+        }
+
+        // --- LOGIQUE VUE ÉCRAN ---
+        function renderScreen(data) {
+            const container = document.getElementById('screen-view');
+            container.style.display = 'grid';
+            container.innerHTML = "";
+            for (let i = 1; i <= NB_PLAYERS; i++) {
+                const p = data[i] || { tasks: {} };
+                const done = p.tasks ? Object.values(p.tasks).filter(t => t === true).length : 0;
+                const isComplete = done === NB_TASKS;
+                container.innerHTML += `
+                    <div class="player-card ${isComplete ? 'complete' : ''}">
+                        <div class="player-num">#${i}</div>
+                        <div>${done} / ${NB_TASKS} tasks</div>
+                    </div>`;
+            }
+        }
+
+        // --- LOGIQUE VUE GM ---
+        function renderGM(data) {
+            const container = document.getElementById('gm-players-list');
+            document.getElementById('gm-view').style.display = 'block';
+            document.getElementById('gm-header').innerText = `GM ${gmId} - Validation Tasks ${myTasks[0]} & ${myTasks[1]}`;
+            container.innerHTML = "";
+
+            for (let i = 1; i <= NB_PLAYERS; i++) {
+                const p = data[i] || { tasks: {} };
+                const t1Done = p.tasks && p.tasks['t'+myTasks[0]];
+                const t2Done = p.tasks && p.tasks['t'+myTasks[1]];
+
+                container.innerHTML += `
+                    <div class="gm-player-row">
+                        <span>JOUEUR <strong>#${i}</strong></span>
+                        <div class="gm-btns">
+                            <button class="btn-task ${t1Done?'done':''}" onclick="toggleTask(${i}, ${myTasks[0]}, ${!t1Done})">Task ${myTasks[0]}</button>
+                            <button class="btn-task ${t2Done?'done':''}" onclick="toggleTask(${i}, ${myTasks[1]}, ${!t2Done})">Task ${myTasks[1]}</button>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        // --- LOGIQUE VUE JOUEUR ---
+        function renderPlayer(pData, id) {
+            const container = document.getElementById('player-tasks-list');
+            document.getElementById('player-view').style.display = 'block';
+            document.getElementById('player-title').innerText = `Agent #${id}`;
+            container.innerHTML = "";
+            
+            for(let i=1; i<=NB_TASKS; i++) {
+                const isDone = pData && pData.tasks && pData.tasks['t'+i];
+                container.innerHTML += `
+                    <div class="task-status ${isDone?'done':''}">
+                        <span>Task ${i}</span>
+                        <span>${isDone?'✔ VALIDÉ':'○ EN COURS'}</span>
+                    </div>`;
+            }
+        }
+
+        // --- ACTION DE VALIDATION ---
+        window.toggleTask = (pId, tId, state) => {
+            update(ref(db, `players/${pId}/tasks`), { ['t'+tId]: state });
+        };
+
+    </script>
+</body>
+</html>
