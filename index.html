@@ -17,6 +17,9 @@
         #progress-bar { width: 0%; height: 100%; background: var(--au-green); transition: width 0.5s ease; }
         #global-percent { font-size: 2.5rem; font-weight: 900; margin-bottom: 20px; }
 
+        /* SECTION CHRONO */
+        #chrono-section { margin-top: 30px; }
+
         /* GRILLE ÉCRAN (30 JOUEURS) */
         #screen-view { display: none; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; max-width: 1200px; margin: auto; }
         .player-card { background: #1a1a1a; border: 1px solid #444; padding: 10px; border-radius: 8px; font-size: 0.8rem; }
@@ -46,10 +49,9 @@
         .segDisplayDigitGroup { overflow: hidden; stroke-width: 0; height: 100%; width: 100%; background-color: #0a0e14;}
         .seg-svg { fill: #280000; overflow: hidden; stroke-width: 0; height: 100%; width: 100%; background-color: #0a0e14;}
 
-        .btn-success { background-color:#0a0e14; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; } 
-        .btn-danger { background-color:#0a0e14; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; } 
-        .btn-primary { background-color:#0a0e14; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; }
-
+        .btn-success { background-color:#1a1a1a; color:white; border:1px solid #444; padding:10px 20px; border-radius:5px; cursor:pointer; } 
+        .btn-danger { background-color:#1a1a1a; color:white; border:1px solid #444; padding:10px 20px; border-radius:5px; cursor:pointer; } 
+        .btn-primary { background-color:#1a1a1a; color:white; border:1px solid #444; padding:10px 20px; border-radius:5px; cursor:pointer; }
     </style>
 </head>
 <body>
@@ -59,34 +61,28 @@
         <div class="au-bar-container"><div id="progress-bar"></div></div>
         <div id="global-percent">0%</div>
         
-        <div class="container text-center">
-		    <div id="segContainer" class="segmentContainer" style="height: 200px; width: 80%; padding: 3em; margin-top: 150px;"></div>
-	    </div>
+        <div id="chrono-section">
+            <div class="container text-center">
+                <div id="segContainer" class="segmentContainer" style="height: 200px; width: 80%; padding: 3em; margin-top: 50px;"></div>
+            </div>
 
-        <div class="container text-center">
-            <button id="start" class="btn-success">Start</button>
-            <button id="pause" class="btn-danger">Pause</button>
-            <button id="reset" class="btn-primary">Reset</button>
-            <button id="setTimeBtn" class="btn-primary">Set Time</button>
+            <div class="container text-center">
+                <button id="start" class="btn-success">Start</button>
+                <button id="pause" class="btn-danger">Pause</button>
+                <button id="reset" class="btn-primary">Reset</button>
+                <button id="setTimeBtn" class="btn-primary">Set Time</button>
 
-            <div id="timeModal" class="hidden" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#1a1a1a; padding:20px; border-radius:10px; border:2px solid #46e32d;">
-                <div>
-                    <label>Hours: <input type="number" id="hour" min="0" max="23" value="1" style="width:50px;"></label>
-                </div>
-                <div>
-                    <label>Minutes: <input type="number" id="min" min="0" max="59" value="0" style="width:50px;"></label>
-                </div>
-                <div>
-                    <label>Seconds: <input type="number" id="sec" min="0" max="59" value="0" style="width:50px;"></label>
-                </div>
-                <div style="margin-top:10px;">
-                    <button id="confirmTime" class="btn-success">Confirm</button>
-                    <button id="cancelTime" class="btn-danger">Cancel</button>
+                <div id="timeModal" class="hidden" style="position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#1a1a1a; padding:20px; border-radius:10px; border:2px solid #46e32d; z-index: 100;">
+                    <div><label>Hours: <input type="number" id="hour" min="0" max="23" value="1" style="width:50px;"></label></div>
+                    <div><label>Minutes: <input type="number" id="min" min="0" max="59" value="0" style="width:50px;"></label></div>
+                    <div><label>Seconds: <input type="number" id="sec" min="0" max="59" value="0" style="width:50px;"></label></div>
+                    <div style="margin-top:10px;">
+                        <button id="confirmTime" class="btn-success">Confirm</button>
+                        <button id="cancelTime" class="btn-danger">Cancel</button>
+                    </div>
                 </div>
             </div>
-            
         </div>
-
     </div>
 
     <div id="screen-view"></div>
@@ -115,19 +111,22 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        // Configuration du jeu
         const NB_PLAYERS = 30;
         const NB_TASKS = 10;
         const params = new URLSearchParams(window.location.search);
-        const gmId = params.get('gm'); // 1, 2, 3, 4 ou 5
+        
+        const gmId = params.get('gm');
         const isScreen = params.has('screen');
-        const playerNum = params.get('p'); // Pour qu'un joueur voit son avancée via ?p=5
+        const playerNum = params.get('p');
 
-        // Attribution des tâches par GM
-        // GM 1 : Tasks 1,2 | GM 2 : Tasks 3,4 | etc.
+        // LOGIQUE DE VISIBILITÉ DU CHRONO :
+        // Si on a un paramètre gm, screen ou p, on cache le chrono.
+        if (gmId || isScreen || playerNum) {
+            document.getElementById('chrono-section').classList.add('hidden');
+        }
+
         const myTasks = gmId ? [(gmId * 2) - 1, gmId * 2] : [];
 
-        // --- SYNCHRONISATION TEMPS RÉEL ---
         onValue(ref(db, 'players'), (snap) => {
             const data = snap.val() || {};
             render(data);
@@ -137,7 +136,6 @@
             let totalDone = 0;
             const totalTasksPossible = NB_PLAYERS * NB_TASKS;
 
-            // Calcul progression globale
             Object.values(playersData).forEach(p => {
                 if(p.tasks) totalDone += Object.values(p.tasks).filter(t => t === true).length;
             });
@@ -150,7 +148,6 @@
             else if (playerNum) renderPlayer(playersData[playerNum], playerNum);
         }
 
-        // --- LOGIQUE VUE ÉCRAN ---
         function renderScreen(data) {
             const container = document.getElementById('screen-view');
             container.style.display = 'grid';
@@ -167,18 +164,15 @@
             }
         }
 
-        // --- LOGIQUE VUE GM ---
         function renderGM(data) {
             const container = document.getElementById('gm-players-list');
             document.getElementById('gm-view').style.display = 'block';
             document.getElementById('gm-header').innerText = `GM ${gmId} - Validation Tasks ${myTasks[0]} & ${myTasks[1]}`;
             container.innerHTML = "";
-
             for (let i = 1; i <= NB_PLAYERS; i++) {
                 const p = data[i] || { tasks: {} };
                 const t1Done = p.tasks && p.tasks['t'+myTasks[0]];
                 const t2Done = p.tasks && p.tasks['t'+myTasks[1]];
-
                 container.innerHTML += `
                     <div class="gm-player-row">
                         <span>JOUEUR <strong>#${i}</strong></span>
@@ -190,13 +184,11 @@
             }
         }
 
-        // --- LOGIQUE VUE JOUEUR ---
         function renderPlayer(pData, id) {
             const container = document.getElementById('player-tasks-list');
             document.getElementById('player-view').style.display = 'block';
             document.getElementById('player-title').innerText = `Agent #${id}`;
             container.innerHTML = "";
-            
             for(let i=1; i<=NB_TASKS; i++) {
                 const isDone = pData && pData.tasks && pData.tasks['t'+i];
                 container.innerHTML += `
@@ -207,12 +199,9 @@
             }
         }
 
-        // --- ACTION DE VALIDATION ---
         window.toggleTask = (pId, tId, state) => {
             update(ref(db, `players/${pId}/tasks`), { ['t'+tId]: state });
         };
-
     </script>
 </body>
-
 </html>
