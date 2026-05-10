@@ -125,7 +125,7 @@
             document.getElementById('chrono-section').classList.add('hidden');
         }
 
-        const myTasks = gmId ? [(gmId * 2) - 1, gmId * 2] : [];
+		const myTasks = gmId ? [parseInt(gmId)] : [];
 
         onValue(ref(db, 'players'), (snap) => {
             const data = snap.val() || {};
@@ -167,7 +167,7 @@
         function renderGM(data) {
             const container = document.getElementById('gm-players-list');
             document.getElementById('gm-view').style.display = 'block';
-            document.getElementById('gm-header').innerText = `GM ${gmId} - Validation Tasks ${myTasks[0]}`;
+            document.getElementById('gm-header').innerText = `GM ${gmId} - Validation Task ${myTasks[0]}`;
             container.innerHTML = "";
             for (let i = 1; i <= NB_PLAYERS; i++) {
                 const p = data[i] || { tasks: {} };
