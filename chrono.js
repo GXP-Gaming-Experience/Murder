@@ -619,7 +619,7 @@ $(document).ready(function () {
 
 			svg.setAttributeNS(null, "id", "svgT");
 			svg.setAttribute("class", "seg-svg");
-			svg.setAttributeNS(null, "viewBox", "0 0 57 80");
+			svg.setAttributeNS(null, "viewBox", "0 0 65 80");
 			svg.setAttributeNS(null, "version", "1.1");
 			svg.setAttribute("xmlns", xmlns);
 			svg.setAttribute("xmlns:xlink", xlinkns);
