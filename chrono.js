@@ -69,7 +69,7 @@ function tick() {
 $(document).ready(function () {
 	segment = $("#segContainer").segmentDisplay({
 		digits: 6,
-		value: "10000",
+		value: "00.30.00",
 		displayType: "seven-seg",
 		colorTheme: "Red"
 	});
