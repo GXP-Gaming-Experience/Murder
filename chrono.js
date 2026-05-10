@@ -46,7 +46,7 @@ function countDown() {
 		clearInterval(interval);
 	}
 
-	segment.value(h + "." + checkTime(m) + "." + checkTime(s));
+	segment.value(checkTime(h) + "." + checkTime(m) + "." + checkTime(s));
 }
 
 function checkTime(i) {
@@ -87,7 +87,7 @@ $(document).ready(function () {
         m = parseInt($("#min").val(), 10) || 0;
         s = parseInt($("#sec").val(), 10) || 0;
         $("#timeModal").addClass("hidden");
-        segment.value(h + "." + checkTime(m) + "." + checkTime(s));
+        segment.value(checkTime(h) + "." + checkTime(m) + "." + checkTime(s))
     });
 
 
