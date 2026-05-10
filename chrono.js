@@ -4,9 +4,9 @@ let segment;
 let interval;
 let start = false;
 let mode = "countDown";
-let h = 1,
-	m = 0,
-	s = 0;
+let h = 00,
+	m = 30,
+	s = 00;
 
 function getTime() {
 	const today = new Date();
