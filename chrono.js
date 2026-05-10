@@ -187,7 +187,7 @@ $(document).ready(function () {
 		let colorThemes = {
 			Red: {
 				colorOn: "Red",
-				colorOff: "rgba(0,0,0,0)"
+				colorOff: "#1b0101"
 			},
 			Lime: {
 				colorOn: "Lime",
