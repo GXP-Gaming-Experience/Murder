@@ -44,7 +44,6 @@ function countDown() {
 	if (s == 0 && m == 0 && h == 0) {
 		start = false;
 		clearInterval(interval);
-		alert("Time's Up!");
 	}
 
 	segment.value(h + "." + checkTime(m) + "." + checkTime(s));
@@ -66,9 +65,6 @@ function tick() {
 		countDown();
 	}
 }
-
-
-
 
 $(document).ready(function () {
 	segment = $("#segContainer").segmentDisplay({
@@ -191,7 +187,7 @@ $(document).ready(function () {
 		let colorThemes = {
 			Red: {
 				colorOn: "Red",
-				colorOff: "#1b0101"
+				colorOff: "rgba(0,0,0,0)"
 			},
 			Lime: {
 				colorOn: "Lime",
