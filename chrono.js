@@ -119,7 +119,7 @@ $(document).ready(function () {
 			}
         segment = $("#segContainer").segmentDisplay({
             digits: 6,
-            value: h.toString() + checkTime(m)  + checkTime(s), 
+            value: checkTime(h) + "." + checkTime(m) + "." + checkTime(s), 
             displayType: "seven-seg",
             colorTheme: "Red"
 	    });
