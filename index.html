@@ -167,18 +167,16 @@
         function renderGM(data) {
             const container = document.getElementById('gm-players-list');
             document.getElementById('gm-view').style.display = 'block';
-            document.getElementById('gm-header').innerText = `GM ${gmId} - Validation Tasks ${myTasks[0]} & ${myTasks[1]}`;
+            document.getElementById('gm-header').innerText = `GM ${gmId} - Validation Tasks ${myTasks[0]}`;
             container.innerHTML = "";
             for (let i = 1; i <= NB_PLAYERS; i++) {
                 const p = data[i] || { tasks: {} };
                 const t1Done = p.tasks && p.tasks['t'+myTasks[0]];
-                const t2Done = p.tasks && p.tasks['t'+myTasks[1]];
                 container.innerHTML += `
                     <div class="gm-player-row">
                         <span>JOUEUR <strong>#${i}</strong></span>
                         <div class="gm-btns">
                             <button class="btn-task ${t1Done?'done':''}" onclick="toggleTask(${i}, ${myTasks[0]}, ${!t1Done})">Task ${myTasks[0]}</button>
-                            <button class="btn-task ${t2Done?'done':''}" onclick="toggleTask(${i}, ${myTasks[1]}, ${!t2Done})">Task ${myTasks[1]}</button>
                         </div>
                     </div>`;
             }
