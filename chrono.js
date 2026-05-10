@@ -24,7 +24,7 @@ function countUp() {
 	h += parseInt(m / 60);
 	m = m % 60;
 	h = h % 24;
-	segment.value(h + "." + checkTime(m) + "." + checkTime(s));
+	segment.value(checkTime(h) + "." + checkTime(m) + "." + checkTime(s));
 }
 
 function countDown() {
