@@ -15,7 +15,24 @@
         .header { margin-bottom: 20px; }
         .au-bar-container { width: 90%; height: 50px; background: #333; border: 3px solid #000; margin: 50px auto; overflow: hidden; border-radius: 5px; }
         #progress-bar { width: 0%; height: 100%; background: var(--au-green); transition: width 0.5s ease; }
-        #global-percent { font-size: 2.5rem; font-weight: 900; margin-bottom: 20px; }
+
+		/* Style par défaut (pour les GM et Joueurs) */
+		#global-percent { 
+		    font-size: 2.5rem; 
+		    font-weight: 900; 
+		    margin-bottom: 20px; 
+		    transition: all 0.3s ease; 
+		}
+
+		/* Style "Écran Géant" (quand le chrono est là) */
+		body.big-mode #global-percent { 
+		    font-size: 15rem !important; 
+		    margin-top: 60px;
+		    margin-bottom: 60px;
+		    color: var(--au-green); 
+		    text-shadow: 0 0 30px rgba(70, 227, 45, 0.5);
+		}
+		}
 
         /* SECTION CHRONO */
         #chrono-section { margin-top: 30px; }
@@ -121,8 +138,11 @@
 
         // LOGIQUE DE VISIBILITÉ DU CHRONO :
         // Si on a un paramètre gm, screen ou p, on cache le chrono.
-        if (gmId || isScreen || playerNum) {
+     	if (gmId || isScreen || playerNum) {
             document.getElementById('chrono-section').classList.add('hidden');
+        } else {
+            // Active le mode géant seulement sur l'écran principal
+            document.body.classList.add('big-mode');
         }
 
 		const myTasks = gmId ? [parseInt(gmId)] : [];
