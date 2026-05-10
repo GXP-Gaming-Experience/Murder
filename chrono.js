@@ -1,4 +1,4 @@
-// Tim et mathis sont passé par la 
+// Tim et mathis sont passés par là 
 
 let segment;
 let interval;
@@ -187,7 +187,7 @@ $(document).ready(function () {
 		let colorThemes = {
 			Red: {
 				colorOn: "Red",
-				colorOff: "#1b0101"
+				colorOff: "rgba(0,0,0,0)"
 			},
 			Lime: {
 				colorOn: "Lime",
